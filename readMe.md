@@ -18,4 +18,4 @@ python app.py
 ```
 
 ## Hosted on Vercel
-link: https://rainbow-nifi.vercel.app/
+[vercel](https://rainbow-nifi.vercel.app/)
