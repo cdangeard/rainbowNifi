@@ -2,71 +2,12 @@ from flask import Flask, request, jsonify, render_template
 import json
 import os
 import xml.etree.ElementTree as ET
+from src.color import addColor_json, colorTemplate
+from src.updateAtribute import createUpdateAtribute_template
 
 colorPatern = json.load(open(os.path.join(os.path.dirname(__file__),'colorPatern.json')))
 
-def addColor_json(flowContents : dict, dictColors : dict) -> dict:
-    '''
-    Attribut:
-        flowContents: dict
-            The json file to coloriage
-        dictColors: dict
-            The dictionnary with the colors
-    Return:
-        ff: dict
-            The json file coloriated
 
-    Add color to the processors recursively
-    '''
-    ff = flowContents.copy()
-    for processors in ff['processors']:
-        try:
-            processors['style']['background-color'] = dictColors[processors['type']]
-        except:
-            print(processors['type'])
-    for processGroups in ff['processGroups']:
-        addColor_json(processGroups, dictColors)
-    return ff
-
-def colorTemplate(XMLfile : ET.ElementTree, colorPatern : dict) -> ET.ElementTree:
-    print('coloriage xml colorTemplate')
-    try:
-        root = XMLfile
-        print('rooted')
-        root.find('name').text += '_colored'
-    except:
-        print('not conform')
-        raise Exception('Invalid XML file')
-    i = 0
-    for child in root.iter():
-        if child.tag == 'processors':
-            i += 1
-            typeChild = child.find('type').text
-            color = colorPatern[typeChild] if typeChild in colorPatern else None
-            if color:
-                # Cas ou le style est déjà défini
-                if (colorProc := child.find('style/entry/value')) is not None:
-                    #print('Type:', typeChild, 'Actual Color:', colorProc.text, 'New Color:', color)
-                    colorProc.text = color
-                else:
-                    style = child.find('style')
-                    if style is None:
-                        style = ET.Element('style')
-                        child.insert(-2, style)
-                    entry = ET.Element('entry')
-                    key = ET.Element('key')
-                    key.text = 'background-color'
-                    value = ET.Element('value')
-                    value.text = color
-                    entry.insert(0, key)
-                    entry.insert(1, value)
-                    style.insert(0, entry)
-                    
-            else:
-                print('Type:', typeChild, 'No Color')
-    print('Total:', i)
-    ET.indent(XMLfile, space="\t", level=0)
-    return XMLfile
 
 app = Flask(__name__) #create the Flask app
 app.config['DEBUG'] = True
@@ -128,6 +69,57 @@ def coloriage():
             return {'error': 'The json file is not coloriable'}, 400
         # Return the coloriage json file
         return jsonify(ff)
+
+@app.route('/updateAttribute')
+def updateAttributePage():
+    '''
+    This function returns the updateAttribute page where users can submit JSON
+    to create XML templates with simplified or full key paths
+    '''
+    return render_template('updateAttribute.html')
+
+@app.route('/updateAttributeSimplified', methods=['POST'])
+def updateAttributeSimplified():
+    '''
+    This function create a XML template of a updateAttribute processor
+    based on the json file given in input
+    The json file must be a valid json file
+    '''
+    return updateAttribute(simplifiedKeys=True)
+
+@app.route('/updateAttributeFull', methods=['POST'])
+def updateAttributeFull():
+    '''
+    This function create a XML template of a updateAttribute processor
+    based on the json file given in input
+    The json file must be a valid json file
+    '''
+    return updateAttribute(simplifiedKeys=False)
+
+def updateAttribute(simplifiedKeys: bool = True):
+    '''
+    This function create a XML template of a updateAttribute processor
+    based on the json file given in input
+    The json file must be a valid json file
+    '''
+    if request.method == 'POST':
+        # validate if data is json
+        try:
+            jsonContent = json.loads(request.data)
+        except:
+            return {'error': 'The json file is not valid'}, 400
+        # Coloriage the json file
+        
+        if jsonContent == {}:
+            return {'error': 'The json file is empty'}, 400
+        try:
+            print("Création updateAtribute Template json")
+            xml = createUpdateAtribute_template(jsonContent, simplifiedKeys)
+        except:
+            return {'error': 'The json file is not coloriable'}, 400
+        # Return the coloriage json file
+        return xml
+
 
 # Run the application
 if __name__ == '__main__':
