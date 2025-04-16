@@ -21,9 +21,33 @@
             display: inline-block;
             font-size: 16px;
         }
+        .nav-links {
+            text-align: center;
+            margin: 20px auto;
+        }
+        .nav-links a {
+            margin: 0 10px;
+            text-decoration: none;
+            color: #4CAF50;
+            font-weight: bold;
+            padding: 5px 10px;
+            border: 1px solid #4CAF50;
+            border-radius: 5px;
+        }
+        .nav-links a:hover {
+            background-color: #4CAF50;
+            color: white;
+        }
     </style>
 </head>
 <body>
+    <h1 style="text-align: center;">Coloriagisation de processgroup Nifi</h1>
+    
+    <div class="nav-links">
+        <a href="/">Coloriagisation</a>
+        <a href="/updateAttribute">EvaluateJsonPath Template</a>
+    </div>
+    
     <div class="drop-area" ondrop="drop(event)" ondragover="allowDrop(event)">
         <p>Drag and Drop json flow definition</p>
     </div>
