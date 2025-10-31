@@ -117,6 +117,11 @@
     <div class="drop-area" ondrop="drop(event)" ondragover="allowDrop(event)">
         <p>Déposez votre fichier JSON ici</p>
     </div>
+    <div style="width:300px;margin:20px auto;text-align:center;">
+        <textarea id="json-textarea" rows="10" style="width:100%;" placeholder="Ou collez votre JSON ici..."></textarea>
+        <br>
+        <button class="button" onclick="sendJsonFromTextbox()">Envoyer le JSON</button>
+    </div>
     
     <div id="error-message" class="error-message"></div>
 
@@ -145,11 +150,27 @@
             reader.readAsText(file);
         }
 
+        function sendJsonFromTextbox() {
+            var textarea = document.getElementById('json-textarea');
+            var content = textarea.value;
+            if (!content.trim()) {
+                showError("Veuillez coller du contenu JSON dans la zone de texte.");
+                return;
+            }
+            try {
+                var json = JSON.parse(content);
+            } catch (error) {
+                showError("Le contenu n'est pas un JSON valide.");
+                return;
+            }
+            // Utilise un nom générique pour le téléchargement
+            sendJsonToEndpoint(json, 'pastedJson.json');
+        }
+
         function showError(message) {
             var errorDiv = document.getElementById('error-message');
             errorDiv.textContent = message;
             errorDiv.style.display = 'block';
-            
             // Hide error after 5 seconds
             setTimeout(function() {
                 errorDiv.style.display = 'none';
@@ -160,10 +181,8 @@
             // Get toggle state
             var useFullKeys = document.getElementById('endpoint-toggle').checked;
             var endpoint = useFullKeys ? '/updateAttributeFull' : '/updateAttributeSimplified';
-            
             // Clear any previous errors
             document.getElementById('error-message').style.display = 'none';
-            
             fetch(endpoint, {
                 method: 'POST',
                 headers: {
@@ -181,15 +200,14 @@
             })
             .then(data => {
                 // Remove previous download button if it exists
-                var existingButton = document.querySelector('button');
+                var existingButton = document.querySelector('button.download-xml');
                 if (existingButton) {
                     existingButton.remove();
                 }
-                
                 // Create download button
                 var downloadButton = document.createElement('button');
                 downloadButton.innerText = 'Télécharger le Template XML';
-                downloadButton.className = 'button';
+                downloadButton.className = 'button download-xml';
                 downloadButton.onclick = function() {
                     var blob = new Blob([data], { type: 'text/xml' });
                     var url = URL.createObjectURL(blob);
@@ -201,7 +219,6 @@
                     a.click();
                     URL.revokeObjectURL(url);
                 };
-                
                 // Add the button to the page
                 document.body.appendChild(downloadButton);
             })

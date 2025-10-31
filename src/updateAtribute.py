@@ -166,7 +166,7 @@ def flatten_dic(y : dict):
     flatten(y)
     return out
 
-def simplify_keys(dic: dict) -> dict:
+def simplify_keys(dic: dict) -> list[dict]:
     """
     Simplify the keys of a dictionary by removing the prefix up to the last dot.
     For example, 'a.b.c' becomes 'c'.
